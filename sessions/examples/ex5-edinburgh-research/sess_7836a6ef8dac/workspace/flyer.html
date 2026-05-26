@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pub Booking — Haymarket Tap</title>
+<style>
+  body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; color: #222; }
+  h1 { color: #1a1a1a; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: .4rem 1rem; }
+  dt { font-weight: bold; color: #555; }
+  dd { margin: 0; }
+</style>
+</head>
+<body>
+<article>
+  <h1>Pub Booking Confirmation</h1>
+  <dl>
+    <dt>Venue</dt>
+    <dd data-testid="venue_name">Haymarket Tap</dd>
+    <dt>Address</dt>
+    <dd data-testid="venue_address">12 Dalry Rd, Edinburgh EH11 2BG</dd>
+    <dt>Date</dt>
+    <dd data-testid="date">2026-04-25</dd>
+    <dt>Time</dt>
+    <dd data-testid="time">19:30</dd>
+    <dt>Party size</dt>
+    <dd data-testid="party_size">6</dd>
+    <dt>Weather</dt>
+    <dd data-testid="condition">cloudy</dd>
+    <dt>Temperature</dt>
+    <dd data-testid="temperature_c">12°C</dd>
+    <dt>Total cost</dt>
+    <dd data-testid="total_gbp">£356</dd>
+    <dt>Deposit</dt>
+    <dd>£<span data-testid="deposit">71</span> deposit required</dd>
+  </dl>
+</article>
+</body>
+</html>

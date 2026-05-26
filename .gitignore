@@ -5,8 +5,7 @@
 .env.*.local
 
 # ── Session artifacts ────────────────────────────────────────────────
-# Sessions contain API output and should not be committed.
-sessions/
+# sessions/ IS committed so the LLM judge can verify Ex9 citations.
 demo_sessions_*/
 *.session.json
 
