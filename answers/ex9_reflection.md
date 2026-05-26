@@ -19,7 +19,8 @@ description "retry with larger venue after rejection", still
 `"assigned_half": "loop"`). The planner only ever thinks in terms of loop
 work.
 
-The actual handoff decision is made by the executor. Ticket `tk_21b9d4da`
+The actual handoff decision is made by the executor. 
+Ticket `tk_21b9d4da`
 (round 1 executor, raw_output.json) shows it called `handoff_to_structured`
 as a tool with:
 
@@ -74,7 +75,7 @@ So now £356 exists in `generate_flyer`'s **arguments** record too.
 The bug: when `verify_dataflow` checked whether `£356` appeared in the
 tool log, it found it in `generate_flyer`'s arguments and returned `ok=True`
 — it was confirming the value against the call that *received* it, not the
-tool that actually *computed* it.
+tool that was used to *compute* it.
 
 The fabrication scenario is concrete: change the FakeLLMClient to pass
 `total_gbp=560` to `generate_flyer` instead. The flyer shows `£560`. A

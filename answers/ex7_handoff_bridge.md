@@ -30,3 +30,6 @@ audit trail.
 
 - starter/handoff_bridge/bridge.py — HandoffBridge.run + helpers
 - starter/handoff_bridge/integrity.py — verify_dataflow
+- sessions/examples/ex7-handoff-bridge/sess_6f1c23f9e1b3/logs/trace.jsonl — full two-round trace: loop→structured (rejected)→loop→structured (confirmed)
+- sessions/examples/ex7-handoff-bridge/sess_6f1c23f9e1b3/logs/tickets/tk_21b9d4da/raw_output.json — round 1 executor, handoff_to_structured tool call
+- sessions/examples/ex7-handoff-bridge/sess_6f1c23f9e1b3/logs/tickets/tk_fa5c8120/state.json — round 2 executor ticket, state: success

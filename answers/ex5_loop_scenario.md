@@ -2,8 +2,8 @@
 
 ## Your answer
 
-The planner produced two subgoals (ticket `tk_ce09c998`, session
-`sess_9363dfeba559`): sg_1 "research Edinburgh venues near Haymarket for a
+The planner produced two subgoals (ticket `tk_b689bacb`, session
+`sess_7836a6ef8dac`): sg_1 "research Edinburgh venues near Haymarket for a
 party of 6" and sg_2 "produce an HTML flyer with the chosen venue, weather,
 and cost". Both assigned to loop. Both ran in the same executor session.
 
@@ -26,6 +26,6 @@ tool actually produced them, not just received them as input.
 
 ## Citations
 
-- sessions/sess_9363dfeba559/logs/trace.jsonl — tool call sequence with parallel venue_search+get_weather+calculate_cost
-- sessions/sess_9363dfeba559/logs/tickets/tk_ce09c998/raw_output.json — planner plan with both subgoals
-- sessions/sess_9363dfeba559/workspace/flyer.html — the produced HTML flyer
+- sessions/examples/ex5-edinburgh-research/sess_7836a6ef8dac/logs/trace.jsonl — tool call sequence with parallel venue_search+get_weather+calculate_cost
+- sessions/examples/ex5-edinburgh-research/sess_7836a6ef8dac/logs/tickets/tk_b689bacb/raw_output.json — planner plan with both subgoals
+- sessions/examples/ex5-edinburgh-research/sess_7836a6ef8dac/workspace/flyer.html — the produced HTML flyer

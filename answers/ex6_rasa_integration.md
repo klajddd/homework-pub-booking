@@ -27,3 +27,4 @@ retries within one session.
 
 - starter/rasa_half/validator.py — normalise_booking_payload + helpers
 - starter/rasa_half/structured_half.py — RasaStructuredHalf.run + mock server
+- sessions/examples/ex7-handoff-bridge/sess_6f1c23f9e1b3/logs/trace.jsonl — rejection event `party_too_large` from structured half in round 1
