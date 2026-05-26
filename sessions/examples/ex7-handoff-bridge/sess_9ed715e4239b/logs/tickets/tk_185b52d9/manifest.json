@@ -1,0 +1,21 @@
+{
+  "ticket_id": "tk_185b52d9",
+  "operation": "planner.plan",
+  "started_at": "2026-05-26T11:25:53.017182+00:00",
+  "completed_at": "2026-05-26T11:25:53.017484+00:00",
+  "duration_ms": 0,
+  "outputs": [
+    {
+      "path": "/Users/klajdkaraj/DEVELOPER/nebius/agents/hometask_2/homework-pub-booking/sessions/examples/ex7-handoff-bridge/sess_9ed715e4239b/logs/tickets/tk_185b52d9/raw_output.json",
+      "sha256": "73a9a35fad895abc4c130587614a9a9ea02ba172e8df21756c8a464c90e875fe",
+      "size_bytes": 259,
+      "content_type": "application/json"
+    }
+  ],
+  "metrics": {
+    "num_subgoals": 1,
+    "llm_tokens_in": 10,
+    "llm_tokens_out": 10,
+    "llm_model": "fake"
+  }
+}

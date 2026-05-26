@@ -106,38 +106,36 @@ To reproduce: seed `_TOOL_CALL_LOG` with `calculate_cost` output
 
 ### Your answer
 
-The first failure I'd expect if we shipped next week is a **lost
-confirmation**: the Rasa webhook processes the booking and marks it
-confirmed, but the network drops the response before the bridge reads the
-HTTP reply. The bridge sees a timeout, doesn't know whether Rasa actually
-committed the booking, and has to choose: retry (risk double-booking the
-pub) or fail closed (risk the customer getting no confirmation). Without
-extra state, neither option is safe.
+When I ran Ex7 with the real LLM (`sess_9656d6b3ed0f`), I hit a failure
+straight away: Rasa was unreachable (`Connection refused`) on every round.
+The bridge had no way to tell the difference between a genuine policy
+rejection and a network error, so it treated each timeout as a rejection,
+swapped the venue, and retried. By round 3 it was proposing a party of 4 at
+a Leith pub — nothing like the original request. It ended with
+`max_rounds_exceeded` and the customer got no confirmation.
 
-The **ticket state machine** is what makes this recoverable.
+The deeper production failure hiding inside that is a **lost confirmation**:
+Rasa actually processes and commits the booking, but the network drops the
+response before the bridge reads it. The bridge has no way to know if the
+booking went through — retry risks double-booking, fail closed means the
+customer hears nothing. Without durable state, you're stuck.
 
-In session `sess_6f1c23f9e1b3`, the bridge created four tickets across two
-rounds: planners `tk_5d75c8fe` and `tk_91d673cc`, executors `tk_21b9d4da`
-and `tk_fa5c8120`. Each ticket has a `state.json` that records whether it
-finished as `pending`, `success`, or `error`. When `tk_fa5c8120` completed
-— the round 2 structured call that confirmed the booking — that state was
-written to disk before the process returned.
+The primitive that fixes this is the **ticket state machine**. In session
+`sess_6f1c23f9e1b3`, every ticket writes a `state.json` with one of three
+values: `pending`, `success`, or `error`. When `tk_fa5c8120` finished — the
+round 2 structured call that confirmed the booking — that `success` state
+was on disk before the process returned.
 
-This is what saves you in the crash scenario: if the bridge dies after Rasa
-responds but before `tk_fa5c8120` is written as `success`, the ticket stays
-`pending` or `error`. On restart, the bridge sees that and knows it needs
-to retry. If the ticket already shows `success`, the bridge knows the
-booking went through and skips the retry — no double-booking.
-
-Without the ticket state machine, the only thing on disk is the IPC file at
-`ipc/handoff_to_structured.json` — it's either there or it's not. That
-tells you a handoff was *requested* but nothing about whether it completed.
-The ticket gives you the three-way distinction (`pending` / `success` /
-`error`) that makes a crash-safe retry actually possible. That's the
-difference between a demo and something you'd trust with a real booking.
+So if the bridge crashes after Rasa commits but before the ticket reaches
+`success`, it stays `pending` on restart and the bridge knows to retry. If
+it already shows `success`, the bridge skips the retry — no double-booking.
+The IPC file alone (`ipc/handoff_to_structured.json`) can't give you this —
+it only tells you a handoff was requested, not whether it completed. The
+ticket's three-way state is what makes safe crash recovery actually possible.
 
 ### Citation
 
-- `sessions/examples/ex7-handoff-bridge/sess_6f1c23f9e1b3/logs/tickets/tk_fa5c8120/state.json` — round 2 executor ticket, terminal state
+- `sessions/examples/ex7-handoff-bridge/sess_9656d6b3ed0f/logs/trace.jsonl` — real LLM run, 3 rounds all fail with `rasa unreachable: Connection refused`, ends `max_rounds_exceeded`
+- `sessions/examples/ex7-handoff-bridge/sess_6f1c23f9e1b3/logs/tickets/tk_fa5c8120/state.json` — round 2 executor ticket, terminal state `success`
 - `sessions/examples/ex7-handoff-bridge/sess_6f1c23f9e1b3/logs/tickets/tk_21b9d4da/state.json` — round 1 executor ticket, terminal state
 - `sessions/examples/ex7-handoff-bridge/sess_6f1c23f9e1b3/logs/trace.jsonl` — `session.state_changed` from→structured, to→complete (round 2)

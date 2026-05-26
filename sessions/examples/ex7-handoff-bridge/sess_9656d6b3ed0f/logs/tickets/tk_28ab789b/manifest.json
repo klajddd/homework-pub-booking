@@ -1,0 +1,20 @@
+{
+  "ticket_id": "tk_28ab789b",
+  "operation": "executor.run_subgoal/sg_1",
+  "started_at": "2026-05-26T11:37:10.645958+00:00",
+  "completed_at": "2026-05-26T11:37:10.647217+00:00",
+  "duration_ms": 1,
+  "outputs": [
+    {
+      "path": "/Users/klajdkaraj/DEVELOPER/nebius/agents/hometask_2/homework-pub-booking/sessions/examples/ex7-handoff-bridge/sess_9656d6b3ed0f/logs/tickets/tk_28ab789b/raw_output.json",
+      "sha256": "b6e672d2daa8b064a7bd662f56c79410d5d32db89d232ca0ed742e398609cc83",
+      "size_bytes": 1380,
+      "content_type": "application/json"
+    }
+  ],
+  "metrics": {
+    "tool_calls": 2,
+    "turns_used": 2,
+    "handoff_requested": true
+  }
+}
