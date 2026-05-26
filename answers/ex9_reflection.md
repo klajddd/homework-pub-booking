@@ -4,44 +4,46 @@
 
 ### Your answer
 
-In session `sess_6f1c23f9e1b3` (Ex7), the signal the question asks about is
-visible in an unexpected place. The planner's round 1 output (ticket
-`tk_5d75c8fe`, raw_output.json) reads:
+Looking at session `sess_6f1c23f9e1b3` (Ex7), the handoff signal doesn't
+come from where you'd expect. The planner's round 1 output (ticket
+`tk_5d75c8fe`, raw_output.json) shows:
 
 ```json
 {"id": "sg_1", "description": "find venue near haymarket for 12",
  "assigned_half": "loop", "success_criterion": "candidate identified"}
 ```
 
-The planner never writes `"assigned_half": "structured"` — not in round 1
+The planner never assigns `"assigned_half": "structured"` — not in round 1
 (`tk_5d75c8fe`) and not in round 2 after the rejection (`tk_91d673cc`:
-description "retry with larger venue after rejection", again
-`"assigned_half": "loop"`). The planner treats the entire task as loop work.
+description "retry with larger venue after rejection", still
+`"assigned_half": "loop"`). The planner only ever thinks in terms of loop
+work.
 
-The actual handoff decision lives in the executor. Ticket `tk_21b9d4da`
-(round 1 executor, raw_output.json) shows the executor called
-`handoff_to_structured` as a tool with:
+The actual handoff decision is made by the executor. Ticket `tk_21b9d4da`
+(round 1 executor, raw_output.json) shows it called `handoff_to_structured`
+as a tool with:
 
 ```
 reason: "loop half identified a candidate venue; passing to structured half
          for confirmation under policy rules"
 ```
 
-The trace.jsonl records the consequence immediately after:
+The trace.jsonl records what happens right after:
 `{"event_type": "session.state_changed", "payload": {"from": "loop",
-"to": "structured", "round": 1}}`. That is the handoff signal — a tool call,
-not a planner assignment.
+"to": "structured", "round": 1}}`. That's the handoff signal — a tool call
+made at runtime, not something the planner decided upfront.
 
-After the structured half rejected (`rejection_reason: "sorry, we can't
-accept this booking. reason: party_too_large"` in trace.jsonl), the bridge
-rebuilt the task and re-ran the planner. Round 2 plan (`tk_91d673cc`) again
-assigns `"loop"`. The structured half never appears in any planner ticket.
+After the structured half rejected the booking
+(`rejection_reason: "sorry, we can't accept this booking. reason: party_too_large"`
+in trace.jsonl), the bridge re-ran the planner. Round 2 plan (`tk_91d673cc`)
+still assigns `"loop"` — the structured half never shows up in any planner
+ticket at all.
 
-The architectural lesson: the planner handles strategic decomposition (what
-to do, in what order); the executor decides at runtime when open-ended
-research should yield to deterministic rule enforcement. The
+So the split of responsibility is: the planner decides what to do and in
+what order; the executor decides at runtime when it's done exploring and
+needs to hand off to the rule-based structured half. The
 `handoff_to_structured` tool call is that decision made explicit — it writes
-an atomic IPC file and signals the bridge to transition state.
+an IPC file and tells the bridge to switch state.
 
 ### Citation
 
@@ -56,35 +58,37 @@ an atomic IPC file and signals the bridge to transition state.
 
 ### Your answer
 
-During Ex5 development I found a self-verifying validation bug that would
-have allowed any fabricated number to pass uncaught.
+While working on Ex5 I found a self-verifying validation bug that would
+have let any fabricated number pass uncaught.
 
 The original `fact_appears_in_log` in integrity.py scanned both `r.output`
 AND `r.arguments` on every tool call record. In session `sess_7836a6ef8dac`,
-the trace.jsonl shows `calculate_cost` recording output
-`{"total_gbp": 356, "deposit_required_gbp": 71}` (summary: "total £356,
-deposit £71"). The executor then called `generate_flyer` with
-`event_details={"total_gbp": 356, "deposit_required_gbp": 71, ...}` — those
-same values now also exist in `generate_flyer`'s **arguments** record.
+the trace.jsonl shows `calculate_cost` returning
+`{"total_gbp": 356, "deposit_required_gbp": 71}` — so "total £356, deposit £71".
+The executor then called `generate_flyer` passing those same values in as
+arguments: `event_details={"total_gbp": 356, "deposit_required_gbp": 71, ...}`.
+So now £356 exists in `generate_flyer`'s **arguments** record too.
 `generate_flyer`'s output is just `{"path": "workspace/flyer.html",
-"bytes_written": 1116}` — it produces no financial facts of its own.
+"bytes_written": 1116}` — it doesn't compute any financial figures itself.
 
-The bug: `verify_dataflow` checking `£356` in the flyer found it in
-`generate_flyer`'s arguments and returned `ok=True` — confirming the value
-against the very call that received it, not the upstream tool that computed it.
+The bug: when `verify_dataflow` checked whether `£356` appeared in the
+tool log, it found it in `generate_flyer`'s arguments and returned `ok=True`
+— it was confirming the value against the call that *received* it, not the
+tool that actually *computed* it.
 
-The fabrication scenario is concrete and reproducible: change the
-FakeLLMClient to pass `total_gbp=560` to `generate_flyer`. The flyer shows
-`£560`. A human reviewer sees a plausible number and moves on. With the old
-integrity check, `fact_appears_in_log('£560')` finds 560 in
-`generate_flyer`'s arguments → `ok=True` → fabrication undetected. With the
-fixed check — `return any(_scan(r.output) for r in records)` — 560 is not in
+The fabrication scenario is concrete: change the FakeLLMClient to pass
+`total_gbp=560` to `generate_flyer` instead. The flyer shows `£560`. A
+human reviewer sees a plausible number and moves on. With the old check,
+`fact_appears_in_log('£560')` finds 560 in `generate_flyer`'s arguments →
+`ok=True` → fabrication goes undetected. With the fix —
+`return any(_scan(r.output) for r in records)` — 560 isn't in
 `calculate_cost`'s output (`total_gbp: 356`) → `ok=False,
 unverified_facts=['£560']` → caught.
 
-The check catches plausible fabrications that visual review misses precisely
-because it cross-references each value against ground-truth tool outputs, not
-against "does this look reasonable."
+The reason this matters is that the check is specifically designed to catch
+plausible fabrications that visual review would miss. A number like £560
+looks reasonable for a party booking — you'd only know it's wrong if you
+cross-reference it against what the tools actually returned.
 
 To reproduce: seed `_TOOL_CALL_LOG` with `calculate_cost` output
 `{"total_gbp": 356}`, call `verify_dataflow("Total: £560")`, assert
@@ -101,35 +105,35 @@ To reproduce: seed `_TOOL_CALL_LOG` with `calculate_cost` output
 
 ### Your answer
 
-The first failure I'd expect shipping next week is a **lost confirmation**:
-the structured half's Rasa webhook processes the booking and marks it
+The first failure I'd expect if we shipped next week is a **lost
+confirmation**: the Rasa webhook processes the booking and marks it
 confirmed, but the network drops the response before the bridge reads the
-HTTP reply. The bridge sees a timeout, doesn't know whether Rasa committed,
-and must decide: retry (risk double-booking the pub) or fail closed (risk the
-customer getting no confirmation). Without additional state, neither option is
-safe.
+HTTP reply. The bridge sees a timeout, doesn't know whether Rasa actually
+committed the booking, and has to choose: retry (risk double-booking the
+pub) or fail closed (risk the customer getting no confirmation). Without
+extra state, neither option is safe.
 
-The **ticket state machine** is the primitive that surfaces this correctly.
+The **ticket state machine** is what makes this recoverable.
 
-In session `sess_6f1c23f9e1b3` the bridge produced four tickets across two
+In session `sess_6f1c23f9e1b3`, the bridge created four tickets across two
 rounds: planners `tk_5d75c8fe` and `tk_91d673cc`, executors `tk_21b9d4da`
-and `tk_fa5c8120`. Each ticket has a `state.json` that records its terminal
-state (`pending`, `success`, `error`). When `tk_fa5c8120` completed — the
-round 2 structured call confirmed — that state was durably written before the
-process returned.
+and `tk_fa5c8120`. Each ticket has a `state.json` that records whether it
+finished as `pending`, `success`, or `error`. When `tk_fa5c8120` completed
+— the round 2 structured call that confirmed the booking — that state was
+written to disk before the process returned.
 
-The value for the crash scenario: if the bridge process dies after Rasa
-responds but before `tk_fa5c8120` reaches `success`, the ticket stays in
-`pending` or `error`. On restart, the bridge reads that state and knows the
-structured call must be retried. If the ticket already shows `success`, the
-bridge knows the booking went through and skips the retry — no double-booking.
+This is what saves you in the crash scenario: if the bridge dies after Rasa
+responds but before `tk_fa5c8120` is written as `success`, the ticket stays
+`pending` or `error`. On restart, the bridge sees that and knows it needs
+to retry. If the ticket already shows `success`, the bridge knows the
+booking went through and skips the retry — no double-booking.
 
-Without the ticket state machine the only durable signal is the IPC file at
-`ipc/handoff_to_structured.json` — binary present/absent. That tells you a
-handoff was requested but not whether it completed. The ticket gives the
-three-way distinction (`pending` / `success` / `error`) that makes crash-safe
-retry possible, which is the exact gap between a demo and a system you'd
-trust with a real booking.
+Without the ticket state machine, the only thing on disk is the IPC file at
+`ipc/handoff_to_structured.json` — it's either there or it's not. That
+tells you a handoff was *requested* but nothing about whether it completed.
+The ticket gives you the three-way distinction (`pending` / `success` /
+`error`) that makes a crash-safe retry actually possible. That's the
+difference between a demo and something you'd trust with a real booking.
 
 ### Citation
 

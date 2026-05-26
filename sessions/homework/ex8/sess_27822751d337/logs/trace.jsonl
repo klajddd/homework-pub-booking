@@ -1,0 +1,8 @@
+{"event_type": "voice.utterance_in", "actor": "user", "timestamp": "2026-05-26T10:56:07.192226+00:00", "payload": {"text": "I'd like to book a table for six people this Friday at 7 p.m. .", "turn": 0, "mode": "voice"}}
+{"event_type": "voice.utterance_out", "actor": "manager", "timestamp": "2026-05-26T10:56:08.654651+00:00", "payload": {"text": "Aye, we can do that. I'll pencil you in for Friday at 7. What's the contact number?", "turn": 0, "mode": "voice"}}
+{"event_type": "voice.utterance_in", "actor": "user", "timestamp": "2026-05-26T10:56:33.441839+00:00", "payload": {"text": "Contact number is 1565615 .", "turn": 1, "mode": "voice"}}
+{"event_type": "voice.utterance_out", "actor": "manager", "timestamp": "2026-05-26T10:56:44.951799+00:00", "payload": {"text": "Sorted, I've got you down. See you Friday.", "turn": 1, "mode": "voice"}}
+{"event_type": "voice.utterance_in", "actor": "user", "timestamp": "2026-05-26T10:57:06.496050+00:00", "payload": {"text": "Great . Thank you .", "turn": 2, "mode": "voice"}}
+{"event_type": "voice.utterance_out", "actor": "manager", "timestamp": "2026-05-26T10:57:06.955536+00:00", "payload": {"text": "You're welcome, laddie.", "turn": 2, "mode": "voice"}}
+{"event_type": "voice.utterance_in", "actor": "user", "timestamp": "2026-05-26T10:57:27.048682+00:00", "payload": {"text": "Okay . Bye .", "turn": 3, "mode": "voice"}}
+{"event_type": "voice.utterance_out", "actor": "manager", "timestamp": "2026-05-26T10:57:27.729002+00:00", "payload": {"text": "Cheerio.", "turn": 3, "mode": "voice"}}

@@ -1,0 +1,20 @@
+{
+  "ticket_id": "tk_fd21e3cb",
+  "operation": "executor.run_subgoal/sg_1",
+  "started_at": "2026-05-26T10:59:37.547880+00:00",
+  "completed_at": "2026-05-26T10:59:37.549592+00:00",
+  "duration_ms": 1,
+  "outputs": [
+    {
+      "path": "/Users/klajdkaraj/DEVELOPER/nebius/agents/hometask_2/homework-pub-booking/sessions/examples/ex5-edinburgh-research/sess_3c3d61809e0c/logs/tickets/tk_fd21e3cb/raw_output.json",
+      "sha256": "e79390c3be7283294b43e3464de7b482e4f9d10a6d88dbee93cb3583161caaaf",
+      "size_bytes": 1944,
+      "content_type": "application/json"
+    }
+  ],
+  "metrics": {
+    "tool_calls": 5,
+    "turns_used": 4,
+    "handoff_requested": false
+  }
+}
