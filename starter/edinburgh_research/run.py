@@ -88,8 +88,8 @@ def _build_fake_client() -> FakeLLMClient:
                 "party_size": 6,
                 "condition": "cloudy",
                 "temperature_c": 12,
-                "total_gbp": 540,
-                "deposit_required_gbp": 0,
+                "total_gbp": 356,
+                "deposit_required_gbp": 71,
             }
         },
     )
@@ -195,7 +195,7 @@ async def run_scenario(real: bool) -> int:
     # populate _TOOL_CALL_LOG before the real scenario runs.
     clear_log()
 
-    with example_sessions_dir("ex5-edinburgh-research", persist=real) as sessions_root:
+    with example_sessions_dir("ex5-edinburgh-research", persist=True) as sessions_root:
         session = create_session(
             scenario="edinburgh-research",
             task=(

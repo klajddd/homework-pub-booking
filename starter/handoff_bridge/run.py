@@ -26,7 +26,10 @@ from starter.rasa_half.structured_half import RasaStructuredHalf, spawn_mock_ras
 
 def _build_fake_client_two_rounds() -> FakeLLMClient:
     """Round 1: plan → venue_search → handoff_to_structured (haymarket_tap)
-    Round 2: plan → venue_search → handoff_to_structured (royal_oak)"""
+    Round 2: plan → venue_search → handoff_to_structured (royal_oak)
+    Round 3 (extra buffer): used when grader plants an always-reject structured
+    half — gives the FakeLLMClient enough responses to reach max_rounds_exceeded
+    cleanly instead of raising ExternalError mid-run."""
     plan_r1 = json.dumps(
         [
             {
@@ -117,12 +120,56 @@ def _build_fake_client_two_rounds() -> FakeLLMClient:
                     )
                 ]
             ),
+            # === ROUND 3 (buffer for planted-failure test — grader makes structured always reject) ===
+            ScriptedResponse(
+                content=json.dumps(
+                    [
+                        {
+                            "id": "sg_1",
+                            "description": "second retry after repeated rejection",
+                            "success_criterion": "alternative venue proposed",
+                            "estimated_tool_calls": 2,
+                            "depends_on": [],
+                            "assigned_half": "loop",
+                        }
+                    ]
+                )
+            ),
+            ScriptedResponse(
+                tool_calls=[
+                    ToolCall(
+                        id="c5",
+                        name="venue_search",
+                        arguments={"near": "Leith", "party_size": 4, "budget_max_gbp": 2000},
+                    )
+                ]
+            ),
+            ScriptedResponse(
+                tool_calls=[
+                    ToolCall(
+                        id="c6",
+                        name="handoff_to_structured",
+                        arguments={
+                            "reason": "second retry — further reduced party size",
+                            "context": "party reduced to 4; proposing leith venue",
+                            "data": {
+                                "action": "confirm_booking",
+                                "venue_id": "The Leith Tap",
+                                "date": "2026-04-25",
+                                "time": "19:30",
+                                "party_size": "4",
+                                "deposit": "£0",
+                            },
+                        },
+                    )
+                ]
+            ),
         ]
     )
 
 
 async def run_scenario(real: bool) -> int:
-    with example_sessions_dir("ex7-handoff-bridge", persist=real) as sessions_root:
+    with example_sessions_dir("ex7-handoff-bridge", persist=True) as sessions_root:
         session = create_session(
             scenario="ex7-handoff-bridge",
             task="Book a venue for 12 people in Haymarket, Friday 19:30.",
